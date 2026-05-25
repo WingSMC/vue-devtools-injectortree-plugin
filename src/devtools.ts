@@ -1,6 +1,4 @@
-import {
-  setupDevToolsPlugin,
-} from '@vue/devtools-api';
+import { setupDevToolsPlugin } from '@vue/devtools-api';
 import type {
   App,
   ComponentInternalInstance,
@@ -30,7 +28,11 @@ interface InspectorStateEntry {
   key: string;
   value: unknown;
   editable?: boolean;
-  objectType?: 'ref' | 'reactive' | 'computed' | 'other';
+  objectType?:
+    | 'ref'
+    | 'reactive'
+    | 'computed'
+    | 'other';
   type?: string;
 }
 
@@ -400,8 +402,8 @@ export function registerInjectorTreePlugin(
 
         payload.instanceData.state.push(
           ...keys.map(key => ({
-            type: 'Injector Tree',
             key,
+            type: 'Injector Tree',
             value: `injected key "${key}"`,
             editable: false,
           })),
