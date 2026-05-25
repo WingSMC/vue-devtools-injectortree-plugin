@@ -10,7 +10,7 @@ export default defineConfig({
     alias: {
       'vue-devtools-injectortree': resolve(
         __dirname,
-        'src/index.ts',
+        'dist/index.mjs',
       ),
     },
   },

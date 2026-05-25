@@ -1,5 +1,5 @@
 import { createApp } from 'vue';
-import { registerInjectorTreePlugin } from '../lib/injector-tree-plugin';
+import { registerInjectorTreePlugin } from 'vue-devtools-injectortree';
 import App from './App.vue';
 
 const app = createApp(App);
