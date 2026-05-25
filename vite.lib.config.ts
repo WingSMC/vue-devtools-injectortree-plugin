@@ -5,7 +5,7 @@ import dts from 'vite-plugin-dts';
 // Library build config
 export default defineConfig({
   plugins: [
-    dts({ include: ['src'], rollupTypes: true }),
+    dts({ include: ['src'], bundleTypes: true }),
   ],
   build: {
     lib: {

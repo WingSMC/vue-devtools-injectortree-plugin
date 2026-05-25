@@ -1,5 +1,10 @@
-import { setupDevtoolsPlugin, type DevtoolsPluginApi } from '@vue/devtools-api'
-import type { App, ComponentInternalInstance } from 'vue'
+import {
+  setupDevToolsPlugin,
+} from '@vue/devtools-api';
+import type {
+  App,
+  ComponentInternalInstance,
+} from 'vue';
 import { buildProviderTree } from './tree-builder';
 import type {
   ProviderNode,
@@ -20,6 +25,19 @@ const COLORS = {
 interface AppContext {
   provides: Record<string | symbol, unknown>;
 }
+
+interface InspectorStateEntry {
+  key: string;
+  value: unknown;
+  editable?: boolean;
+  objectType?: 'ref' | 'reactive' | 'computed' | 'other';
+  type?: string;
+}
+
+type InspectorState = Record<
+  string,
+  InspectorStateEntry[]
+>;
 
 /** Retrieve the internal root component instance and app-level provides. */
 function getAppInternals(app: App): {
@@ -58,10 +76,14 @@ function flattenNodes(
 }
 
 interface InspectorNode {
-  id: string
-  label: string
-  tags: { label: string; textColor: number; backgroundColor: number }[]
-  children: InspectorNode[]
+  id: string;
+  label: string;
+  tags: {
+    label: string;
+    textColor: number;
+    backgroundColor: number;
+  }[];
+  children: InspectorNode[];
 }
 
 /**
@@ -70,7 +92,6 @@ interface InspectorNode {
  */
 function toInspectorNode(
   node: ProviderNode,
-  api: DevtoolsPluginApi<Record<string, unknown>>,
 ): InspectorNode {
   const keyCount = Object.keys(
     node.provides,
@@ -99,7 +120,7 @@ function toInspectorNode(
     label: node.componentName,
     tags,
     children: node.children.map(child =>
-      toInspectorNode(child, api),
+      toInspectorNode(child),
     ),
   };
 }
@@ -133,7 +154,7 @@ function toAppRootNode(tree: ProviderTreeRoot) {
  */
 function buildNodeState(
   node: ProviderNode,
-): Record<string, unknown[]> {
+): InspectorState {
   const providedEntries = Object.entries(
     node.provides,
   ).map(([key, value]) => ({
@@ -142,13 +163,13 @@ function buildNodeState(
     editable: false,
     ...(node.overriddenKeys.includes(key)
       ? {
-          objectType: 'computed',
+          objectType: 'computed' as const,
           type: '⚠ overrides ancestor',
         }
       : {}),
   }));
 
-  const sections: Record<string, unknown[]> = {
+  const sections: InspectorState = {
     'Provided Keys': providedEntries,
   };
 
@@ -180,7 +201,7 @@ function buildNodeState(
 export function registerInjectorTreePlugin(
   app: App,
 ): void {
-  setupDevtoolsPlugin(
+  setupDevToolsPlugin(
     {
       id: PLUGIN_ID,
       label: 'Injector Tree',
@@ -241,7 +262,7 @@ export function registerInjectorTreePlugin(
 
         const appRootNode = toAppRootNode(tree);
         const componentNodes = tree.nodes.map(n =>
-          toInspectorNode(n, api),
+          toInspectorNode(n),
         );
 
         // Simple filter: hide nodes whose label doesn't match
@@ -307,7 +328,7 @@ export function registerInjectorTreePlugin(
                 value,
                 editable: false,
               })),
-          };
+          } satisfies InspectorState;
           return;
         }
 
@@ -353,7 +374,8 @@ export function registerInjectorTreePlugin(
       });
 
       // ── Component state: show what a component injects ────────────────────
-      api.on.getComponentState(payload => {
+      // v8 keeps the v6 custom-plugin hook names for compatibility.
+      api.on.inspectComponent(payload => {
         const instance =
           payload.componentInstance as unknown as {
             type?: { inject?: unknown };
@@ -386,19 +408,13 @@ export function registerInjectorTreePlugin(
         );
       });
 
-      // Refresh the inspector whenever the component tree updates
-      api.on.componentUpdated(() => {
+      // Refresh inspector on a short polling interval so the tree stays
+      // current as components mount/unmount (lifecycle hooks are not
+      // exposed through devtools-api v6's api.on).
+      setInterval(() => {
         api.sendInspectorTree(INSPECTOR_ID);
         api.sendInspectorState(INSPECTOR_ID);
-      });
-
-      api.on.componentAdded(() => {
-        api.sendInspectorTree(INSPECTOR_ID);
-      });
-
-      api.on.componentRemoved(() => {
-        api.sendInspectorTree(INSPECTOR_ID);
-      });
+      }, 2000);
     },
   );
 }
