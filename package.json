@@ -1,0 +1,43 @@
+{
+  "name": "vue-devtools-injectortree",
+  "version": "0.1.0",
+  "description": "Vue DevTools plugin that visualizes provide/inject relationships as an injector tree",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "sideEffects": false,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --config vite.lib.config.ts",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "vue",
+    "devtools",
+    "provide",
+    "inject",
+    "injector-tree"
+  ],
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  },
+  "dependencies": {
+    "@vue/devtools-api": "^6.6.4"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "@vue/compiler-sfc": "^3.4.0",
+    "typescript": "^5.4.0",
+    "vite": "^5.0.0",
+    "vite-plugin-dts": "^3.9.0",
+    "vue": "^3.4.0"
+  }
+}
